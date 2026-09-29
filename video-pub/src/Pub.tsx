@@ -1,7 +1,8 @@
 import React from 'react';
-import {AbsoluteFill, Audio, continueRender, delayRender, interpolate, Series, staticFile, useCurrentFrame} from 'remotion';
-import {Fade, CL} from './kit';
-import {S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S12, S13, S15, S16, S17, S18, S19, S20} from './scenes';
+import {AbsoluteFill, Audio, continueRender, delayRender, interpolate, Sequence, Series, staticFile, useCurrentFrame} from 'remotion';
+import {CL, Fade} from './kit';
+import {STORY} from './story';
+import {layout, sceneDur, SceneView} from './timeline';
 
 const handle = delayRender('fonts');
 Promise.all(
@@ -11,28 +12,52 @@ Promise.all(
 	}),
 ).then(() => continueRender(handle));
 
-export const SCENES: [React.FC, number][] = [
-	[S1, 300], [S2, 270], [S3, 300], [S4, 390], [S5, 120], [S6, 390], [S7, 330], [S8, 270], [S9, 600],
-	[S10, 450], [S12, 360], [S13, 450], [S15, 360], [S16, 870], [S17, 420], [S18, 150], [S19, 270], [S20, 540],
-];
-export const TOTAL = SCENES.reduce((a, [, d]) => a + d, 0);
+const DURS = STORY.map(sceneDur);
+export const TOTAL = DURS.reduce((a, b) => a + b, 0);
+const SWITCH_SCENE = 6; // « Quelques temps plus tard » : la musique devient rythmée
+const SWITCH = DURS.slice(0, SWITCH_SCENE).reduce((a, b) => a + b, 0);
 
-const Music: React.FC = () => {
+// Intervalles où quelqu'un parle : la musique baisse (ducking)
+const SPEECH: [number, number][] = [];
+{
+	let s0 = 0;
+	STORY.forEach((beats) => {
+		let b0 = s0;
+		beats.forEach((b) => {
+			const c = layout(b);
+			c.t.forEach((t) => SPEECH.push([b0 + t.from, b0 + t.to]));
+			b0 += c.dur;
+		});
+		s0 += DURS[STORY.indexOf(beats)];
+	});
+}
+const duck = (f: number) => {
+	let d = 1e9;
+	for (const [a, b] of SPEECH) d = Math.min(d, f < a ? a - f : f > b ? f - b : 0);
+	return interpolate(d, [0, 12], [0.14, 0.42], CL);
+};
+
+const Music: React.FC<{src: string; offset: number; len: number}> = ({src, offset, len}) => {
 	const f = useCurrentFrame();
-	return <Audio src={staticFile('music.wav')} volume={() => interpolate(f, [0, 30, TOTAL - 60, TOTAL], [0, 0.55, 0.55, 0], CL)} />;
+	return <Audio src={staticFile(src)} loop volume={() => duck(f + offset) * interpolate(f, [0, 20, len - 30, len], [0, 1, 1, 0], CL)} />;
 };
 
 export const Pub: React.FC = () => (
 	<AbsoluteFill style={{background: '#000'}}>
 		<Series>
-			{SCENES.map(([S, d], i) => (
-				<Series.Sequence key={i} durationInFrames={d}>
-					<Fade dur={d} a={i === 0 ? 1 : 10}>
-						<S />
+			{STORY.map((beats, i) => (
+				<Series.Sequence key={i} durationInFrames={DURS[i]}>
+					<Fade dur={DURS[i]} a={i === 0 ? 1 : 8}>
+						<SceneView beats={beats} />
 					</Fade>
 				</Series.Sequence>
 			))}
 		</Series>
-		<Music />
+		<Sequence durationInFrames={SWITCH}>
+			<Music src="music-a.wav" offset={0} len={SWITCH} />
+		</Sequence>
+		<Sequence from={SWITCH}>
+			<Music src="music-b.wav" offset={SWITCH} len={TOTAL - SWITCH} />
+		</Sequence>
 	</AbsoluteFill>
 );

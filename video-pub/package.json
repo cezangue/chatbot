@@ -4,7 +4,8 @@
   "scripts": {
     "studio": "remotion studio",
     "render": "node scripts/music.js && remotion render src/index.ts Pub out/pub.mp4 --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell --crf=20",
-    "music": "node scripts/music.js"
+    "music": "node scripts/music.js",
+    "voices": "python3 scripts/voices.py"
   },
   "dependencies": {
     "@fontsource/montserrat": "^5.3.0",
