@@ -5,14 +5,14 @@ import {Portrait, Projector, TitleCard} from './cast';
 import {BSlide, BVariant} from './slides';
 import {Beat, Timed} from './timeline';
 
-const P = (who: string, lines: string[] = [], o: Partial<Beat> & {mood?: string; min?: number; focus?: string} = {}): Beat => ({
+const P = (who: string, lines: string[] = [], o: Partial<Beat> & {mood?: string; min?: number; focus?: string; noTag?: boolean} = {}): Beat => ({
 	lines,
 	min: o.min ?? (lines.length ? 0 : 40),
 	lead: o.lead ?? 6,
 	tail: o.tail ?? 6,
 	place: o.place,
 	sfx: o.sfx,
-	render: ({dur}) => <Portrait who={who} mood={o.mood} dur={dur} focus={o.focus} />,
+	render: ({dur}) => <Portrait who={who} mood={o.mood} dur={dur} focus={o.focus} noTag={o.noTag} />,
 });
 
 const Title = (text: string, frames = 55, sub?: string): Beat => ({min: frames, render: () => <TitleCard text={text} sub={sub} />});
@@ -183,7 +183,7 @@ const Principles: React.FC<{m: number[]}> = ({m}) => {
 	);
 };
 
-const Profile: React.FC<{emoji: string; title: string; v: BVariant}> = ({emoji, title, v}) => {
+const Profile: React.FC<{emoji: string; title: string; v: BVariant; photo?: string}> = ({emoji, title, v, photo}) => {
 	const f = useCurrentFrame();
 	const p = interpolate(f, [0, 12], [0, 1], CL);
 	return (
@@ -194,8 +194,13 @@ const Profile: React.FC<{emoji: string; title: string; v: BVariant}> = ({emoji, 
 					{emoji} {title}
 				</div>
 			</div>
-			<div style={{position: 'absolute', left: 330, top: 230, padding: 10, background: '#111', borderRadius: 12, boxShadow: '0 30px 60px rgba(0,0,0,0.3)'}}>
-				<SlideBox w={1260}>
+			{photo && (
+				<div style={{position: 'absolute', left: 90, top: 250, width: 700, height: 474, borderRadius: 16, overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.3)'}}>
+					<Img src={staticFile(photo)} style={{width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${1 + f / 900})`}} />
+				</div>
+			)}
+			<div style={{position: 'absolute', left: photo ? 830 : 330, top: photo ? 280 : 230, padding: 10, background: '#111', borderRadius: 12, boxShadow: '0 30px 60px rgba(0,0,0,0.3)'}}>
+				<SlideBox w={photo ? 1000 : 1260}>
 					<BSlide v={v} />
 				</SlideBox>
 			</div>
@@ -288,7 +293,7 @@ export const STORY: Beat[][] = [
 		P('JEAN', [], {mood: 'stress', min: 45}),
 	],
 	// 2 — Mais pourquoi ?
-	[P('POSE', ['pose1']), {lines: ['pose2'], render: ({t}) => <Kinetic items={[['Qu’est-ce qui s’est réellement passé ?', t[0].from, 64], ['Remontons trois jours en arrière…', t[0].to - 45, 50, C.yellow]]} />}, Title('3 JOURS PLUS TÔT…')],
+	[{lines: ['pose1'], render: ({t}) => <Kinetic photo="cast/JEAN-stress.jpg" items={[['Pourquoi Paul…', t[0].from + 20, 90, C.yellow], ['… et pas Jean ?', t[0].from + 70, 90]]} />}, {lines: ['pose2'], render: ({t}) => <Kinetic items={[['Qu’est-ce qui s’est réellement passé ?', t[0].from, 64], ['Remontons trois jours en arrière…', t[0].to - 45, 50, C.yellow]]} />}, Title('3 JOURS PLUS TÔT…')],
 	// 3 — Jean doit faire la présentation
 	[
 		P('DIRECTEUR', ['d3'], {place: 'BUREAU — 3 JOURS PLUS TÔT'}),
@@ -349,9 +354,11 @@ export const STORY: Beat[][] = [
 	[
 		{lines: ['p3'], place: 'MÊME SALLE — MÊME ÉQUIPE', render: () => <Projector audience="happy"><BSlide v="title" /></Projector>},
 		{min: 75, render: () => <Projector audience="happy"><BSlide v="levers" /></Projector>},
-		{lines: ['c1'], lead: 50, render: () => <Projector audience="happy"><BSlide v="chart" /></Projector>},
+		{min: 70, render: () => <Projector audience="happy"><BSlide v="chart" /></Projector>},
+		P('COLLÈGUE', ['c1']),
 		{min: 60, render: () => <Projector audience="happy"><BSlide v="compare" /></Projector>},
-		P('DIRECTEUR', ['d5'], {tail: 60, sfx: [APPLAUSE(150)]}),
+		P('DIRECTEUR', ['d5'], {tail: 10}),
+		P('EQUIPE', [], {min: 110, noTag: true, place: 'L’ÉQUIPE APPLAUDIT PAUL', sfx: [APPLAUSE(0, 0.6)]}),
 	],
 	// 11-12 — la différence
 	[{lines: ['pose8', 'pose9', 'pose10'], render: () => <Split />}],
@@ -374,7 +381,7 @@ export const STORY: Beat[][] = [
 		},
 		P('SONIA', [], {min: 75, sfx: [APPLAUSE(0, 0.6)]}),
 		{lines: ['pose18'], render: () => <Profile emoji="🎒" title="Les élèves" v="class" />},
-		{lines: ['pose19', 'c2'], render: () => <Profile emoji="💼" title="Les professionnels" v="levers" />},
+		{lines: ['pose19', 'c2'], render: () => <Profile emoji="💼" title="Les professionnels" v="levers" photo="cast/PROS.jpg" />},
 		{lines: ['pose20'], render: () => <Profile emoji="🎓" title="Enseignants & formateurs" v="idea" />},
 		{lines: ['pose21'], render: () => <Profile emoji="🚀" title="Les entrepreneurs" v="pitch" />},
 	],

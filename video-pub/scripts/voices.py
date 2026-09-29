@@ -19,7 +19,7 @@ CAST_VOICES = {
     'PAUL': ('fr_FR-upmc-medium', 1, 0.95, 0.98),
     'DIRECTEUR': ('fr_FR-upmc-medium', 1, 0.88, 0.84),
     'ESTHER': ('fr_FR-siwis-medium', 0, 1.05, 1.0),
-    'COLLÈGUE': ('fr_FR-upmc-medium', 0, 1.0, 1.0),
+    'COLLÈGUE': ('fr_FR-gilles-low', 0, 1.0, 1.0),
 }
 
 SPOKEN = [

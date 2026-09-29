@@ -14,8 +14,10 @@ export const ROLE: Record<string, string> = {
 };
 
 // Photos déposées dans public/cast/ : NOM.jpg, ou NOM-humeur.jpg (ex. JEAN-stress.png)
-export const castSrc = (who: string, mood?: string): string | null => {
+const plain = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+export const castSrc = (whoRaw: string, mood?: string): string | null => {
 	const files = cast as string[];
+	const who = plain(whoRaw);
 	const pick = (k: string) => files.find((f) => f.replace(/\.\w+$/, '').toUpperCase() === k.toUpperCase());
 	return (mood && pick(`${who}-${mood}`)) || pick(who) || files.find((f) => f.toUpperCase().startsWith(`${who.toUpperCase()}-`)) || null;
 };
@@ -23,7 +25,7 @@ export const castSrc = (who: string, mood?: string): string | null => {
 const NameTag: React.FC<{who: string}> = ({who}) => (
 	<div style={{position: 'absolute', top: 44, right: 56, fontFamily: FONT, textAlign: 'right', zIndex: 20}}>
 		<div style={{fontSize: 40, fontWeight: 900, color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.6)'}}>{who === 'POSE' ? 'Pose' : who.charAt(0) + who.slice(1).toLowerCase()}</div>
-		<div style={{fontSize: 22, fontWeight: 600, color: WHO[who] ?? '#fff', letterSpacing: 2}}>{ROLE[who]}</div>
+		<div style={{fontSize: 22, fontWeight: 700, color: WHO[who] ?? '#fff', letterSpacing: 2, textShadow: '0 2px 10px rgba(0,0,0,0.9)'}}>{ROLE[who]}</div>
 	</div>
 );
 
@@ -52,7 +54,7 @@ const Placeholder: React.FC<{who: string}> = ({who}) => {
 	);
 };
 
-export const Portrait: React.FC<{who: string; mood?: string; dur: number; focus?: string; zoomOut?: boolean}> = ({who, mood, dur, focus = '50% 35%', zoomOut}) => {
+export const Portrait: React.FC<{who: string; mood?: string; dur: number; focus?: string; zoomOut?: boolean; noTag?: boolean}> = ({who, mood, dur, focus = '50% 35%', zoomOut, noTag}) => {
 	const f = useCurrentFrame();
 	const src = castSrc(who, mood);
 	if (!src) return <Placeholder who={who} />;
@@ -66,7 +68,7 @@ export const Portrait: React.FC<{who: string; mood?: string; dur: number; focus?
 				<Img src={staticFile(`cast/${src}`)} style={{width: '100%', height: '100%', objectFit: 'contain'}} />
 			</AbsoluteFill>
 			<AbsoluteFill style={{background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55))'}} />
-			<NameTag who={who} />
+			{!noTag && <NameTag who={who} />}
 		</AbsoluteFill>
 	);
 };
