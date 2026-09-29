@@ -1,8 +1,7 @@
 import React from 'react';
-import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
-import {BigText, C, CL, FONT, KenBurns, MessySlide, PPTWindow, ProductBox, SlideBox, Symbol} from './kit';
+import {AbsoluteFill, Img, interpolate, OffthreadVideo, staticFile, useCurrentFrame} from 'remotion';
+import {BigText, C, CL, FONT, KenBurns, PPTWindow, ProductBox, SlideBox, Symbol} from './kit';
 import {Portrait, Projector, TitleCard} from './cast';
-import {BSlide, BVariant} from './slides';
 import {Beat, Timed} from './timeline';
 
 const P = (who: string, lines: string[] = [], o: Partial<Beat> & {mood?: string; min?: number; focus?: string; noTag?: boolean} = {}): Beat => ({
@@ -14,6 +13,9 @@ const P = (who: string, lines: string[] = [], o: Partial<Beat> & {mood?: string;
 	sfx: o.sfx,
 	render: ({dur}) => <Portrait who={who} mood={o.mood} dur={dur} focus={o.focus} noTag={o.noTag} />,
 });
+
+// Diapositive réelle exportée depuis les fichiers PowerPoint (decks/out)
+const S = (name: string) => <Img src={staticFile(`slides/${name}.png`)} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} />;
 
 const Title = (text: string, frames = 55, sub?: string): Beat => ({min: frames, render: () => <TitleCard text={text} sub={sub} />});
 
@@ -32,15 +34,15 @@ const Cursor: React.FC = () => {
 	);
 };
 
-const EstherBuild: React.FC = () => {
+const EstherBuild: React.FC<{fixed?: number}> = ({fixed}) => {
 	const f = useCurrentFrame();
-	const step = Math.floor((f - 10) / 30);
-	const labels = ['+ un titre « WordArt »', '+ beaucoup de texte', '+ des effets', '+ un tableau multicolore', '+ des images', '+ des formes', '+ encore une police'];
+	const step = fixed ?? Math.min(4, Math.floor((f - 10) / 45));
+	const labels = ['+ un titre « WordArt » penché', '+ un mur de texte en 4 couleurs', '+ un tableau arc-en-ciel', '+ un camembert', '+ « Merci !!! » et un smiley'];
 	return (
 		<AbsoluteFill style={{background: '#1a1f2b'}}>
 			<PPTWindow w={1500} x={210} y={60}>
 				<SlideBox w={(1000 * 1500) / 1400}>
-					<MessySlide step={step} />
+					{S(`jean-${[1, 2, 3, 3, 4][Math.max(0, step)]}`)}
 				</SlideBox>
 			</PPTWindow>
 			{labels.map((l, i) =>
@@ -77,7 +79,7 @@ const STEPS = ['Définir l’objectif', 'Organiser ses idées', 'Construire une 
 const Steps: React.FC<{m: number[]}> = ({m}) => {
 	const f = useCurrentFrame();
 	const cur = m.filter((x) => f >= x).length - 1;
-	const slides: BVariant[] = ['idea', 'idea', 'title', 'levers', 'levers', 'chart', 'compare', 'compare'];
+	const slides = ['paul-2', 'paul-3', 'paul-1', 'paul-3', 'paul-5', 'paul-4', 'paul-6', 'paul-7'];
 	return (
 		<AbsoluteFill style={{background: 'linear-gradient(135deg,#0b1f4d,#132b66 60%,#1d3a8a)'}}>
 			<div style={{position: 'absolute', left: 70, top: 44, fontFamily: FONT, fontWeight: 900, fontSize: 42, color: '#fff'}}>
@@ -96,11 +98,9 @@ const Steps: React.FC<{m: number[]}> = ({m}) => {
 				})}
 			</div>
 			<div style={{position: 'absolute', left: 840, top: 150, padding: 10, background: '#fff', borderRadius: 14, boxShadow: '0 30px 60px rgba(0,0,0,0.4)'}}>
-				<SlideBox w={1000} key={slides[Math.max(0, cur)]}>
-					<BSlide v={slides[Math.max(0, cur)]} />
-				</SlideBox>
+				<SlideBox w={1000}>{S(slides[Math.max(0, cur)])}</SlideBox>
 			</div>
-			<div style={{position: 'absolute', left: 840, top: 740, fontFamily: FONT, fontSize: 24, color: '#c7d2fe', fontWeight: 600}}>Aperçu : les diapositives « Bonhomme » de Paul</div>
+			<div style={{position: 'absolute', left: 840, top: 740, fontFamily: FONT, fontSize: 24, color: '#c7d2fe', fontWeight: 600}}>Les vraies diapositives de Paul (fichier PowerPoint « Projet Horizon »)</div>
 		</AbsoluteFill>
 	);
 };
@@ -125,9 +125,9 @@ const Split: React.FC = () => {
 	);
 	return (
 		<AbsoluteFill style={{background: '#0a0f1f', flexDirection: 'row', padding: '50px 60px 0', gap: 60}}>
-			{col('JEAN', C.red, ['Beaucoup de texte', 'Trop de couleurs', 'Aucune structure'], <MessySlide />, 20)}
+			{col('JEAN', C.red, ['Beaucoup de texte', 'Trop de couleurs', 'Aucune structure'], S('jean-2'), 20)}
 			<div style={{width: 4, background: '#334', marginBottom: 300}} />
-			{col('PAUL', C.green, ['Un message par diapositive', 'Hiérarchie claire', 'Visuels « Bonhomme » pertinents'], <BSlide v="chart" />, 80)}
+			{col('PAUL', C.green, ['Un message par diapositive', 'Hiérarchie claire', 'Visuels « Bonhomme » pertinents'], S('paul-4'), 80)}
 		</AbsoluteFill>
 	);
 };
@@ -150,8 +150,8 @@ const ProductReveal: React.FC = () => {
 	const p = interpolate(f, [0, 25], [0, 1], CL);
 	return (
 		<AbsoluteFill style={{background: 'radial-gradient(circle at 40% 45%, #3a2a12, #07090f 70%)'}}>
-			<div style={{position: 'absolute', left: 700, top: 60, transform: `scale(${0.85 + 0.15 * p}) rotate(${(1 - p) * -8}deg)`, opacity: p}}>
-				<ProductBox w={520} style={{boxShadow: '0 50px 120px rgba(0,0,0,0.8)'}} />
+			<div style={{position: 'absolute', left: 725, top: 40, transform: `scale(${0.85 + 0.15 * p}) rotate(${(1 - p) * -8}deg)`, opacity: p}}>
+				<ProductBox w={470} style={{boxShadow: '0 50px 120px rgba(0,0,0,0.8)'}} />
 			</div>
 		</AbsoluteFill>
 	);
@@ -183,7 +183,7 @@ const Principles: React.FC<{m: number[]}> = ({m}) => {
 	);
 };
 
-const Profile: React.FC<{emoji: string; title: string; v: BVariant; photo?: string}> = ({emoji, title, v, photo}) => {
+const Profile: React.FC<{emoji: string; title: string; v: string; photo?: string}> = ({emoji, title, v, photo}) => {
 	const f = useCurrentFrame();
 	const p = interpolate(f, [0, 12], [0, 1], CL);
 	return (
@@ -201,7 +201,7 @@ const Profile: React.FC<{emoji: string; title: string; v: BVariant; photo?: stri
 			)}
 			<div style={{position: 'absolute', left: photo ? 830 : 330, top: photo ? 280 : 230, padding: 10, background: '#111', borderRadius: 12, boxShadow: '0 30px 60px rgba(0,0,0,0.3)'}}>
 				<SlideBox w={photo ? 1000 : 1260}>
-					<BSlide v={v} />
+					{S(v)}
 				</SlideBox>
 			</div>
 		</AbsoluteFill>
@@ -214,11 +214,9 @@ const Morph: React.FC<{at: number}> = ({at}) => {
 	return (
 		<AbsoluteFill style={{background: '#0a0f1f', justifyContent: 'center', alignItems: 'center'}}>
 			<div style={{position: 'relative', width: 1400, height: 787, marginBottom: 120, boxShadow: '0 30px 80px rgba(0,0,0,0.6)'}}>
-				<SlideBox w={1400}>
-					<MessySlide />
-				</SlideBox>
+				<SlideBox w={1400}>{S('jean-3')}</SlideBox>
 				<div style={{position: 'absolute', inset: 0, clipPath: `inset(0 ${100 - m}% 0 0)`}}>
-					<SlideBox w={1400}>{m > 0 && <BSlide v="compare" />}</SlideBox>
+					<SlideBox w={1400}>{m > 0 && S('paul-5')}</SlideBox>
 				</div>
 				<div style={{position: 'absolute', top: 0, bottom: 0, left: `${m}%`, width: 8, background: C.orange, opacity: m > 0 && m < 100 ? 1 : 0}} />
 			</div>
@@ -240,8 +238,8 @@ const BeforeAfter: React.FC = () => {
 	);
 	return (
 		<AbsoluteFill style={{flexDirection: 'row', background: '#000', gap: 8}}>
-			{half('2.png', 'AVANT', '« Je ne sais pas par où commencer. »', C.red, 0)}
-			{half('1.png', 'APRÈS', '« Je sais construire ma présentation. »', C.green, 45)}
+			{half('cast/JEAN-stress.jpg', 'AVANT', '« Je ne sais pas par où commencer. »', C.red, 0)}
+			{half('cast/SONIA.jpg', 'APRÈS', '« Je sais construire ma présentation. »', C.green, 45)}
 		</AbsoluteFill>
 	);
 };
@@ -281,14 +279,25 @@ const CTA: React.FC = () => {
 	);
 };
 
+const SoniaDeck: React.FC<{dur: number}> = ({dur}) => {
+	const f = useCurrentFrame();
+	const i = Math.min(5, 1 + Math.floor((f / dur) * 5));
+	return <Projector audience="happy">{S(`sonia-${i}`)}</Projector>;
+};
+
 const APPLAUSE = (at: number, volume = 0.5) => ({src: 'sfx/applause.wav', at, volume});
 
 export const STORY: Beat[][] = [
-	// 1 — Jean ne fera pas la présentation
+	// 1 — Jean ne fera pas la présentation (clip réaliste fourni, voix incluses)
 	[
-		P('DIRECTEUR', ['d1'], {place: 'BUREAU DU DIRECTEUR — JOUR'}),
-		P('JEAN', [], {mood: 'stress', min: 40}),
-		P('DIRECTEUR', ['d2']),
+		{
+			min: 300,
+			captions: [
+				{id: 'd1', from: 36, to: 104},
+				{id: 'd2', from: 150, to: 218},
+			],
+			render: () => <OffthreadVideo src={staticFile('clips/s01.mp4')} style={{width: '100%', height: '100%', objectFit: 'cover'}} />,
+		},
 		P('PAUL', ['p1']),
 		P('JEAN', [], {mood: 'stress', min: 45}),
 	],
@@ -315,18 +324,18 @@ export const STORY: Beat[][] = [
 	[
 		P('JEAN', ['j3'], {mood: 'stress'}),
 		P('ESTHER', ['e1']),
-		{min: 235, render: () => <EstherBuild />},
-		{lines: ['e2'], render: () => <EstherBuild />},
+		{min: 240, render: () => <EstherBuild />},
+		{lines: ['e2'], render: () => <EstherBuild fixed={1} />},
 		P('JEAN', ['j4']),
 		P('ESTHER', ['e3']),
-		{min: 50, render: () => <AbsoluteFill><SlideBox w={1920}><MessySlide /></SlideBox></AbsoluteFill>},
+		{min: 55, render: () => <AbsoluteFill><SlideBox w={1920}>{S('jean-2')}</SlideBox></AbsoluteFill>},
 	],
 	// 6 — la présentation ratée
 	[
-		{lines: ['j5'], place: 'SALLE DE RÉUNION — JOUR J', render: () => <Projector><MessySlide /></Projector>},
+		{lines: ['j5'], place: 'SALLE DE RÉUNION — JOUR J', render: () => <Projector>{S('jean-1')}</Projector>},
 		P('DIRECTEUR', [], {min: 40}),
-		{lines: ['j6'], lead: 20, render: () => <Projector shake={6} audience="lost"><MessySlide /></Projector>},
-		{lines: ['j7'], render: () => <Projector audience="lost"><div style={{position: 'absolute', inset: 0, background: '#000', color: '#fff', fontSize: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT}}>Diapositive 17 / 42</div></Projector>},
+		{lines: ['j6'], lead: 20, render: () => <Projector shake={6} audience="lost">{S('jean-2')}</Projector>},
+		{lines: ['j7'], render: () => <Projector audience="lost">{S('jean-4')}</Projector>},
 		P('JEAN', [], {mood: 'stress', min: 45}),
 	],
 	// 7 — le problème, c'était la méthode
@@ -336,7 +345,7 @@ export const STORY: Beat[][] = [
 			lines: ['pose3', 'pose4'],
 			render: ({t}) => (
 				<Kinetic
-					photo="2.png"
+					photo="cast/JEAN-stress.jpg"
 					items={[
 						['Jean avait travaillé.', t[0].from, 60],
 						['Esther savait utiliser PowerPoint.', t[0].from + 40, 60],
@@ -347,16 +356,17 @@ export const STORY: Beat[][] = [
 		},
 	],
 	// 8 — quelques temps plus tard
-	[Title('QUELQUES TEMPS PLUS TARD…'), P('DIRECTEUR', ['d4']), P('PAUL', ['p2']), {lines: ['pose5'], tail: 20, render: () => <ProductReveal />}],
+	[Title('QUELQUES TEMPS PLUS TARD…'), P('BUREAU', ['d4'], {noTag: true, place: 'BUREAU DE M. KOFFI'}), P('PAUL', ['p2']), {lines: ['pose5'], tail: 20, render: () => <ProductReveal />}],
 	// 9 — les 8 étapes (les « Bonhommes » apparaissent dans les slides de Paul)
 	[{lines: ['pose6', 'pose7'], render: ({t}) => <Steps m={marks(t, 4)} />}],
 	// 10-11 — la présentation réussie de Paul
 	[
-		{lines: ['p3'], place: 'MÊME SALLE — MÊME ÉQUIPE', render: () => <Projector audience="happy"><BSlide v="title" /></Projector>},
-		{min: 75, render: () => <Projector audience="happy"><BSlide v="levers" /></Projector>},
-		{min: 70, render: () => <Projector audience="happy"><BSlide v="chart" /></Projector>},
+		{lines: ['p3'], place: 'MÊME SALLE — MÊME ÉQUIPE', render: () => <Projector audience="happy">{S('paul-1')}</Projector>},
+		{min: 80, render: () => <Projector audience="happy">{S('paul-3')}</Projector>},
+		{min: 75, render: () => <Projector audience="happy">{S('paul-4')}</Projector>},
 		P('COLLÈGUE', ['c1']),
-		{min: 60, render: () => <Projector audience="happy"><BSlide v="compare" /></Projector>},
+		{min: 70, render: () => <Projector audience="happy">{S('paul-5')}</Projector>},
+		{min: 55, render: () => <Projector audience="happy">{S('paul-7')}</Projector>},
 		P('DIRECTEUR', ['d5'], {tail: 10}),
 		P('EQUIPE', [], {min: 110, noTag: true, place: 'L’ÉQUIPE APPLAUDIT PAUL', sfx: [APPLAUSE(0, 0.6)]}),
 	],
@@ -377,13 +387,13 @@ export const STORY: Beat[][] = [
 			lines: ['pose17'],
 			tail: 70,
 			place: 'SOUTENANCE D’INGÉNIEUR — MISE EN SCÈNE',
-			render: () => <Projector audience="happy"><BSlide v="thesis" /></Projector>,
+			render: ({dur}) => <SoniaDeck dur={dur} />,
 		},
 		P('SONIA', [], {min: 75, sfx: [APPLAUSE(0, 0.6)]}),
-		{lines: ['pose18'], render: () => <Profile emoji="🎒" title="Les élèves" v="class" />},
-		{lines: ['pose19', 'c2'], render: () => <Profile emoji="💼" title="Les professionnels" v="levers" photo="cast/PROS.jpg" />},
-		{lines: ['pose20'], render: () => <Profile emoji="🎓" title="Enseignants & formateurs" v="idea" />},
-		{lines: ['pose21'], render: () => <Profile emoji="🚀" title="Les entrepreneurs" v="pitch" />},
+		{lines: ['pose18'], render: () => <Profile emoji="🎒" title="Les élèves" v="exemples-1" />},
+		{lines: ['pose19', 'c2'], render: () => <Profile emoji="💼" title="Les professionnels" v="paul-3" photo="cast/PROS.jpg" />},
+		{lines: ['pose20'], render: () => <Profile emoji="🎓" title="Enseignants & formateurs" v="exemples-2" />},
+		{lines: ['pose21'], render: () => <Profile emoji="🚀" title="Les entrepreneurs" v="exemples-3" />},
 	],
 	// 17-18 — débutant ou expert ? avant / après
 	[{lines: ['pose22'], render: () => <BeforeAfter />}],

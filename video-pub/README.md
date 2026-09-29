@@ -4,6 +4,17 @@ Vidéo Remotion (1920×1080, 30 i/s, ~4 min 40 s) : dialogues **parlés** (voix 
 synchronisés, vraies photos pour les personnages, et les « Bonhommes » **dans les diapositives de Paul**
 (la démonstration de la méthode).
 
+## Vraies présentations PowerPoint (`decks/`)
+
+`decks/decks.js` génère les fichiers `.pptx` montrés dans la vidéo, tous sur le même exemple (« Projet Horizon ») :
+`Paul_Projet_Horizon_Methode_Bonhomme.pptx` (7 diapos), `Jean_Esther_Rapport_Horizon_sans_methode.pptx` (4 diapos, volontairement ratées),
+`Sonia_Soutenance_ingenieur.pptx` (5 diapos), `Exemples_eleve_enseignant_entrepreneur.pptx` (3 diapos).
+Les illustrations « Bonhomme » viennent de `decks/bonhommes.js`. Export des diapositives en images : `public/slides/`.
+
+## Plans réalistes
+
+`public/clips/s01.mp4` (clip fourni) ouvre la vidéo. Les autres plans à générer sont décrits dans `PLANS_A_GENERER.md`.
+
 ## Ajouter / remplacer les photos des personnages
 
 Déposer les photos dans `public/cast/`, nommées d’après le personnage, puis relancer `npm run voices` (met à jour la liste) et `npm run render` :

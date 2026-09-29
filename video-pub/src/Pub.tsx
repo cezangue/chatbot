@@ -25,7 +25,7 @@ const SPEECH: [number, number][] = [];
 		let b0 = s0;
 		beats.forEach((b) => {
 			const c = layout(b);
-			c.t.forEach((t) => SPEECH.push([b0 + t.from, b0 + t.to]));
+			[...c.t, ...(b.captions ?? [])].forEach((t) => SPEECH.push([b0 + t.from, b0 + t.to]));
 			b0 += c.dur;
 		});
 		s0 += DURS[STORY.indexOf(beats)];

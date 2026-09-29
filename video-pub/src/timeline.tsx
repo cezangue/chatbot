@@ -18,6 +18,7 @@ export type Beat = {
 	tail?: number; // silence après la dernière réplique
 	place?: string;
 	sfx?: {src: string; at: number; volume?: number}[];
+	captions?: Timed[]; // sous-titres d'un clip qui porte déjà sa propre voix
 	render: (c: Ctx) => React.ReactNode;
 };
 
@@ -91,7 +92,7 @@ export const BeatView: React.FC<{b: Beat}> = ({b}) => {
 					<Audio src={staticFile(s.src)} volume={s.volume ?? 0.6} />
 				</Sequence>
 			))}
-			{c.t.map((tm) => (
+			{[...c.t, ...(b.captions ?? [])].map((tm) => (
 				<SyncCaption key={tm.id} tm={tm} />
 			))}
 			{b.place && <PlaceTag text={b.place} />}

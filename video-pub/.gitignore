@@ -2,3 +2,6 @@ node_modules/
 out/
 public/music.wav
 tts-models/
+decks/node_modules/
+decks/out/*.pdf
+decks/out/*.jpg
