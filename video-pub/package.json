@@ -1,0 +1,18 @@
+{
+  "name": "nouvelle-methode-powerpoint-video",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "node scripts/music.js && remotion render src/index.ts Pub out/pub.mp4 --browser-executable=/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell --crf=20",
+    "music": "node scripts/music.js"
+  },
+  "dependencies": {
+    "@fontsource/montserrat": "^5.3.0",
+    "@remotion/cli": "^4.0.529",
+    "@types/react": "^18.3.31",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.529",
+    "typescript": "^7.0.2"
+  }
+}
