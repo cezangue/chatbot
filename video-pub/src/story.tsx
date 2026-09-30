@@ -4,14 +4,14 @@ import {BigText, C, CL, FONT, KenBurns, PPTWindow, ProductBox, SlideBox, Symbol}
 import {Portrait, Projector, TitleCard} from './cast';
 import {Beat, Timed} from './timeline';
 
-const P = (who: string, lines: string[] = [], o: Partial<Beat> & {mood?: string; min?: number; focus?: string; noTag?: boolean} = {}): Beat => ({
+const P = (who: string, lines: string[] = [], o: Partial<Beat> & {mood?: string; min?: number; focus?: string; noTag?: boolean; v?: number} = {}): Beat => ({
 	lines,
 	min: o.min ?? (lines.length ? 0 : 40),
 	lead: o.lead ?? 6,
 	tail: o.tail ?? 6,
 	place: o.place,
 	sfx: o.sfx,
-	render: ({dur}) => <Portrait who={who} mood={o.mood} dur={dur} focus={o.focus} noTag={o.noTag} />,
+	render: ({dur}) => <Portrait who={who} mood={o.mood} dur={dur} focus={o.focus} noTag={o.noTag} v={o.v} />,
 });
 
 // Diapositive réelle exportée depuis les fichiers PowerPoint (decks/out)
@@ -306,7 +306,7 @@ export const STORY: Beat[][] = [
 	// 3 — Jean doit faire la présentation
 	[
 		P('DIRECTEUR', ['d3'], {place: 'BUREAU — 3 JOURS PLUS TÔT'}),
-		P('JEAN', ['j1']),
+		P('JEAN', ['j1'], {v: 1}),
 		{
 			lines: ['j2'],
 			lead: 70,
@@ -326,21 +326,27 @@ export const STORY: Beat[][] = [
 		P('ESTHER', ['e1']),
 		{min: 240, render: () => <EstherBuild />},
 		{lines: ['e2'], render: () => <EstherBuild fixed={1} />},
-		P('JEAN', ['j4']),
+		P('JEAN', ['j4'], {v: 1}),
 		P('ESTHER', ['e3']),
 		{min: 55, render: () => <AbsoluteFill><SlideBox w={1920}>{S('jean-2')}</SlideBox></AbsoluteFill>},
 	],
 	// 6 — la présentation ratée
 	[
 		{lines: ['j5'], place: 'SALLE DE RÉUNION — JOUR J', render: () => <Projector>{S('jean-1')}</Projector>},
-		P('DIRECTEUR', [], {min: 40}),
+		P('DIRECTEUR', [], {min: 40, v: 1}),
 		{lines: ['j6'], lead: 20, render: () => <Projector shake={6} audience="lost">{S('jean-2')}</Projector>},
 		{lines: ['j7'], render: () => <Projector audience="lost">{S('jean-4')}</Projector>},
-		P('JEAN', [], {mood: 'stress', min: 45}),
 	],
 	// 7 — le problème, c'était la méthode
 	[
-		P('JEAN', ['j8'], {mood: 'stress'}),
+		{
+			min: 300,
+			captions: [
+				{id: 'c2a', from: 39, to: 66, who: 'JEAN', text: 'Mais pourquoi ça ?'},
+				{id: 'c2b', from: 108, to: 156, who: 'JEAN', text: 'J’ai tout fait comme Esther m’a montré…'},
+			],
+			render: () => <OffthreadVideo src={staticFile('clips/s02.mp4')} style={{width: '100%', height: '100%', objectFit: 'cover'}} />,
+		},
 		{
 			lines: ['pose3', 'pose4'],
 			render: ({t}) => (
@@ -367,7 +373,7 @@ export const STORY: Beat[][] = [
 		P('COLLÈGUE', ['c1']),
 		{min: 70, render: () => <Projector audience="happy">{S('paul-5')}</Projector>},
 		{min: 55, render: () => <Projector audience="happy">{S('paul-7')}</Projector>},
-		P('DIRECTEUR', ['d5'], {tail: 10}),
+		P('DIRECTEUR', ['d5'], {tail: 10, v: 1}),
 		P('EQUIPE', [], {min: 110, noTag: true, place: 'L’ÉQUIPE APPLAUDIT PAUL', sfx: [APPLAUSE(0, 0.6)]}),
 	],
 	// 11-12 — la différence
@@ -401,7 +407,7 @@ export const STORY: Beat[][] = [
 	[
 		P('JEAN', ['j9']),
 		{lines: ['p4'], render: () => <ProductReveal />},
-		P('JEAN', ['j10']),
+		P('JEAN', ['j10'], {v: 1}),
 		P('PAUL', ['p5'], {tail: 25}),
 	],
 	// 20-21 — message final et appel à l'action

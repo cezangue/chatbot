@@ -1,16 +1,48 @@
 import React from 'react';
-import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Img, interpolate, Loop, OffthreadVideo, staticFile, useCurrentFrame} from 'remotion';
 import cast from './cast.json';
 import {C, CL, FONT, SlideBox, WHO} from './kit';
 
 export const ROLE: Record<string, string> = {
 	JEAN: 'Employé',
 	PAUL: 'Employé',
-	DIRECTEUR: 'Direction',
+	DIRECTEUR: 'M. Koffi',
 	ESTHER: 'Collègue de Jean',
 	POSE: 'Narrateur',
 	SONIA: 'Étudiante en ingénierie',
 	'COLLÈGUE': 'Collègue',
+};
+
+// Plans vivants redécoupés dans les clips réalistes (secondes dans le clip).
+// Utilisés à la place des photos : le personnage bouge, cligne des yeux, respire.
+type Seg = {src: string; from: number; to: number; rate?: number; scale?: number; origin?: string};
+export const LIVE: Record<string, Seg[]> = {
+	DIRECTEUR: [
+		{src: 'clips/s01.mp4', from: 0.9, to: 3.3, rate: 0.8, scale: 1.35, origin: '22% 30%'},
+		{src: 'clips/s01.mp4', from: 5.2, to: 7.8, rate: 0.8, scale: 1.3, origin: '30% 35%'},
+	],
+	PAUL: [{src: 'clips/s01.mp4', from: 5.0, to: 7.8, rate: 0.7, scale: 2.1, origin: '98% 38%'}],
+	JEAN: [
+		{src: 'clips/s02.mp4', from: 0.0, to: 1.25, rate: 0.5, scale: 1.1, origin: '50% 30%'},
+		{src: 'clips/s02.mp4', from: 5.4, to: 6.8, rate: 0.6, scale: 1.25, origin: '55% 35%'},
+	],
+	BUREAU: [{src: 'clips/s01.mp4', from: 8.0, to: 10.0, rate: 0.7, scale: 1.05}],
+};
+
+export const LiveShot: React.FC<{seg: Seg; dur: number}> = ({seg, dur}) => {
+	const f = useCurrentFrame();
+	const rate = seg.rate ?? 1;
+	const len = Math.max(10, Math.floor(((seg.to - seg.from) * 30) / rate) - 1);
+	const push = interpolate(f, [0, dur], [1, 1.06], CL);
+	return (
+		<AbsoluteFill style={{background: '#000', overflow: 'hidden'}}>
+			<AbsoluteFill style={{transform: `scale(${(seg.scale ?? 1) * push})`, transformOrigin: seg.origin ?? '50% 50%'}}>
+				<Loop durationInFrames={len}>
+					<OffthreadVideo src={staticFile(seg.src)} startFrom={Math.round(seg.from * 30)} endAt={Math.round(seg.to * 30)} playbackRate={rate} muted style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+				</Loop>
+			</AbsoluteFill>
+		</AbsoluteFill>
+	);
 };
 
 // Photos déposées dans public/cast/ : NOM.jpg, ou NOM-humeur.jpg (ex. JEAN-stress.png)
@@ -54,8 +86,15 @@ const Placeholder: React.FC<{who: string}> = ({who}) => {
 	);
 };
 
-export const Portrait: React.FC<{who: string; mood?: string; dur: number; focus?: string; zoomOut?: boolean; noTag?: boolean}> = ({who, mood, dur, focus = '50% 35%', zoomOut, noTag}) => {
+export const Portrait: React.FC<{who: string; mood?: string; dur: number; focus?: string; zoomOut?: boolean; noTag?: boolean; v?: number}> = ({who, mood, dur, focus = '50% 35%', zoomOut, noTag, v = 0}) => {
 	const f = useCurrentFrame();
+	const live = LIVE[plain(who)];
+	if (live) return (
+		<AbsoluteFill>
+			<LiveShot seg={live[v % live.length]} dur={dur} />
+			{!noTag && <NameTag who={who} />}
+		</AbsoluteFill>
+	);
 	const src = castSrc(who, mood);
 	if (!src) return <Placeholder who={who} />;
 	const s = interpolate(f, [0, dur], zoomOut ? [1.16, 1.04] : [1.04, 1.16], CL);

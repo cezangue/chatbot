@@ -8,7 +8,7 @@ type VoiceMeta = Record<string, {frames: number; env: number[]}>;
 const V = voice as VoiceMeta;
 const L = lines as unknown as Record<string, [string, string]>;
 
-export type Timed = {id: string; from: number; to: number};
+export type Timed = {id: string; from: number; to: number; who?: string; text?: string};
 export type Ctx = {dur: number; t: Timed[]};
 export type Beat = {
 	lines?: string[];
@@ -40,13 +40,13 @@ export const sceneDur = (beats: Beat[]) => beats.reduce((a, b) => a + layout(b).
 // Sous-titre synchronisé avec la voix + indicateur de parole
 const SyncCaption: React.FC<{tm: Timed}> = ({tm}) => {
 	const f = useCurrentFrame();
-	const [who, text] = L[tm.id];
+	const [who, text] = tm.text ? [tm.who ?? '', tm.text] : L[tm.id];
 	const end = tm.to + 8;
 	if (f < tm.from - 4 || f > end) return null;
 	const o = interpolate(f, [tm.from - 4, tm.from + 4, end - 6, end], [0, 1, 1, 0], CL);
 	const p = interpolate(f, [tm.from, tm.from + (tm.to - tm.from) * 0.92], [0, 1], CL);
 	const n = Math.ceil(text.length * p);
-	const env = V[tm.id].env;
+	const env = V[tm.id]?.env ?? [0.6, 0.9, 0.5, 0.8, 0.4, 0.9, 0.7];
 	const lvl = env[Math.max(0, Math.min(env.length - 1, f - tm.from))] ?? 0;
 	const color = WHO[who] ?? '#fff';
 	return (
